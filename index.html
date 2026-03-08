@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cashflow Tracker</title>
+    <!-- PWA Meta -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4361ee">
+    <link rel="apple-touch-icon"
+        href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiPjxwYXRoIGZpbGw9IiM0MzYxZWUiIGQ9Ik0yMSAyMnYtMkgzYy0uNTUyIDAtMS0uNDQ4LTEtMWMwLS4xNjYuMDQtLjMyNS4xMTYtLjQ3Mkw0IDE1SDIydi0yaDMuMzkyYTYgNiAwIDAgMCAxLjkzNS0xMS42ODVMMTUgM2wtMS41IEguMTM2IDQuNDdhOCA4IDAgMCAxLTEzLjE0NCAzLjIyMkwyMSAyaDJ2MjB6bS00LjEwNi01TDExIDEwLjIzNlYxMGg0VjhoLjgyOGwtLjgyOC00LjEwNi01TDExIDEwLjIzNlY0aC0yVjNoOHYyaDIuNzgybC0yLjMxOCAxMS41OTFMMTEgMTB6Ii8+PC9zdmc+">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header will be dynamic based on view -->
+        <header id="main-header" class="header">
+            <div class="header-title">
+                <h1 id="page-title">Beranda</h1>
+                <p class="subtitle">OVERVIEW KEKAYAAN</p>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="btn-privacy"><i class="ri-eye-line"></i></button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="content-area">
+            <!-- Home View -->
+            <div id="view-home" class="view active">
+                <section class="networth-card">
+                    <div class="networth-header">
+                        <span class="label">TOTAL KEKAYAAN BERSIH</span>
+                        <span class="badge">LIVE MARKET</span>
+                    </div>
+                    <div class="networth-amount" id="total-networth">Rp 0</div>
+
+                    <div class="networth-split">
+                        <div class="split-item">
+                            <span class="split-label">TOTAL DOMPET</span>
+                            <span class="split-value" id="total-wallet">Rp 0</span>
+                        </div>
+                        <div class="split-item border-left">
+                            <span class="split-label">NILAI INVESTASI</span>
+                            <span class="split-value text-green" id="total-investment">Rp 0</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="wallets-section mt-4">
+                    <h2 class="section-title"><i class="ri-wallet-3-line"></i> Dompet Anda</h2>
+                    <div class="cards-grid" id="wallets-grid-main">
+                        <!-- Main Wallet cards will be rendered here -->
+                    </div>
+                    <div class="cards-grid-2" id="wallets-grid-secondary">
+                        <!-- Debt/Receivable cards will be rendered here -->
+                    </div>
+                </section>
+
+                <section class="assets-section mt-4">
+                    <h2 class="section-title">Aset Investasi</h2>
+                    <div class="cards-grid scroll-x" id="assets-grid-mini">
+                        <!-- Mini asset cards will be rendered here via JS -->
+                    </div>
+                </section>
+
+                <section class="recent-activity-section mt-4 mb-5">
+                    <div class="section-header">
+                        <h2 class="section-title"><i class="ri-pulse-line"></i> Aktivitas Terakhir</h2>
+                        <a href="#" class="link-btn" onclick="app.navigate('history')">Lihat Semua</a>
+                    </div>
+                    <div class="transactions-list" id="recent-transactions">
+                        <!-- Transactions will be rendered here -->
+                    </div>
+                </section>
+                <div class="spacer-bottom"></div>
+            </div>
+
+            <!-- Assets View -->
+            <div id="view-assets" class="view">
+
+                <section class="wallets-management-card mt-3">
+                    <div class="portfolio-header mb-3">
+                        <h2 class="section-title"><i class="ri-wallet-3-line"></i> Manajemen Dompet</h2>
+                    </div>
+
+                    <div class="assets-list" id="manage-wallets-list">
+                        <!-- Custom wallets will be rendered here -->
+                    </div>
+                </section>
+
+                <section class="portfolio-card mt-4">
+                    <div class="portfolio-header">
+                        <h2 class="section-title"><i class="ri-briefcase-4-line"></i> Portofolio Aset</h2>
+                        <span class="badge light">Harga Real-time</span>
+                    </div>
+                    <div class="assets-list mt-3" id="portfolio-list">
+                        <!-- Full assets list here -->
+                    </div>
+                </section>
+
+                <section class="portfolio-card mt-4">
+                    <div class="portfolio-header">
+                        <h2 class="section-title"><i class="ri-target-line"></i> Target Tabungan</h2>
+                        <button class="btn btn-small btn-primary" onclick="app.openGoalModal()"><i class="ri-add-line"></i> Buat Target</button>
+                    </div>
+                    <div class="assets-list mt-3" id="goals-list">
+                        <!-- Goals rendered here -->
+                    </div>
+                </section>
+
+                <section class="debt-management-card mt-5">
+                    <div class="portfolio-header">
+                        <h2 class="section-title"><i class="ri-hand-coin-line"></i> Hutang & Piutang</h2>
+                    </div>
+                    <div class="assets-list mt-3" id="debt-menu-list">
+                        <!-- Debt menus will be rendered here -->
+                    </div>
+                </section>
+
+                <div class="action-buttons-grid mt-4">
+                    <button class="btn btn-dark btn-large" style="grid-column: span 2;" onclick="app.openAssetModal()">
+                        <i class="ri-add-line"></i> Tambah Portofolio Aset
+                    </button>
+                </div>
+                <div class="spacer-bottom"></div>
+            </div>
+
+            <!-- View: Wallet Category Detail -->
+            <div id="view-wallet-category" class="view">
+                <div class="header category-header"
+                    style="padding: 24px 0 16px; margin-top: -24px; position: sticky; top: -24px; background: var(--bg-main); z-index: 10; display: flex; align-items: center; border-bottom: 1px solid var(--border);">
+                    <button class="icon-btn" onclick="app.navigate('assets')"><i class="ri-arrow-left-s-line"
+                            style="font-size:24px;"></i></button>
+                    <h2 class="section-title" id="category-title" style="margin-left: 16px; flex:1;">Kategori</h2>
+                    <button class="btn btn-small btn-primary" onclick="app.openCategoryAdd()"><i
+                            class="ri-add-line"></i> Tambah</button>
+                </div>
+
+                <div class="assets-list mt-4" id="category-wallets-list">
+                    <!-- Credit cards rendered here -->
+                </div>
+
+                <div class="spacer-bottom"></div>
+            </div>
+
+            <!-- View: Wallet Specific Detail (History per wallet) -->
+            <div id="view-wallet-detail" class="view">
+                <div class="header category-header"
+                    style="padding: 24px 0 16px; margin-top: -24px; position: sticky; top: -24px; background: var(--bg-main); z-index: 10; display: flex; align-items: center; border-bottom: 1px solid var(--border);">
+                    <button class="icon-btn" onclick="app.navigate('wallet-category')"><i class="ri-arrow-left-s-line"
+                            style="font-size:24px;"></i></button>
+                    <h2 class="section-title" id="wallet-detail-title" style="margin-left: 16px; flex:1;">Detail Dompet</h2>
+                </div>
+
+                <div id="wallet-summary-card" class="mt-4">
+                    <!-- Wallet Card rendered here -->
+                </div>
+
+                <h3 class="section-title mt-4 mb-3" style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7;">Riwayat Transaksi</h3>
+                <div class="history-list" id="wallet-specific-history">
+                    <!-- Custom transactions rendered here -->
+                </div>
+
+                <div class="spacer-bottom"></div>
+            </div>
+
+            <!-- View: All Goals List -->
+            <div id="view-goals-list" class="view">
+                <div class="header category-header"
+                    style="padding: 24px 0 16px; margin-top: -24px; position: sticky; top: -24px; background: var(--bg-main); z-index: 10; display: flex; align-items: center; border-bottom: 1px solid var(--border);">
+                    <button class="icon-btn" onclick="app.navigate('assets')"><i class="ri-arrow-left-s-line"
+                            style="font-size:24px;"></i></button>
+                    <h2 class="section-title" style="margin-left: 16px; flex:1;">Semua Target Tabungan</h2>
+                    <button class="btn btn-small btn-primary" onclick="app.openGoalModal()"><i class="ri-add-line"></i> Buat</button>
+                </div>
+
+                <div class="assets-list mt-4" id="all-goals-list">
+                    <!-- All Goals rendered here -->
+                </div>
+
+                <div class="spacer-bottom"></div>
+            </div>
+
+            <!-- View: Debt Category Detail -->
+            <div id="view-debt-category" class="view">
+                <div class="header category-header"
+                    style="padding: 24px 0 16px; margin-top: -24px; position: sticky; top: -24px; background: var(--bg-main); z-index: 10; display: flex; align-items: center; border-bottom: 1px solid var(--border);">
+                    <button class="icon-btn" onclick="app.navigate('assets')"><i class="ri-arrow-left-s-line"
+                            style="font-size:24px;"></i></button>
+                    <h2 class="section-title" id="debt-category-title" style="margin-left: 16px; flex:1;">Detail</h2>
+                    <button class="btn btn-small btn-primary" onclick="app.openDebtModal()"><i class="ri-add-line"></i>
+                        Catat Baru</button>
+                </div>
+
+                <div class="assets-list mt-4" id="category-debts-list">
+                    <!-- Debt cards rendered here -->
+                </div>
+
+                <div class="spacer-bottom"></div>
+            </div>
+
+            <!-- Report View -->
+            <div id="view-report" class="view">
+                <section class="budget-card">
+                    <div class="budget-header">
+                        <h2 class="section-title"><i class="ri-focus-2-line"></i> Target Anggaran</h2>
+                        <button class="btn btn-small btn-dark">Ubah Anggaran</button>
+                    </div>
+                    <div class="budget-details mt-3">
+                        <div class="budget-spent">
+                            <span class="label">PENGELUARAN BULAN INI</span>
+                            <div class="amount text-red" id="budget-spent-amount">Rp 0</div>
+                        </div>
+                        <div class="budget-limit text-right">
+                            <span class="label">BATAS MAKSIMAL</span>
+                            <div class="amount-small" id="budget-limit-amount">Rp 0</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar-container mt-2">
+                        <div class="progress-bar" id="budget-progress" style="width: 0%"></div>
+                    </div>
+                    <div class="budget-status mt-2">
+                        <span class="status-text text-red" id="budget-status-text">Memuat...</span>
+                        <span class="status-percent badge light" id="budget-percent">0%</span>
+                    </div>
+                </section>
+
+                <section class="cashflow-card mt-4">
+                    <h2 class="section-title"><i class="ri-bar-chart-grounped-line"></i> Aliran Kas</h2>
+                    <div class="cashflow-summary mt-3">
+                        <div class="summary-box box-in">
+                            <i class="ri-arrow-left-down-line"></i> MASUK
+                            <div class="amount mt-1" id="cash-in-amount">Rp 0</div>
+                        </div>
+                        <div class="summary-box box-out">
+                            <i class="ri-arrow-right-up-line"></i> KELUAR
+                            <div class="amount mt-1" id="cash-out-amount">Rp 0</div>
+                        </div>
+                    </div>
+                    <div class="chart-container mt-4">
+                        <!-- Simple bar chart visualization -->
+                        <div class="bar-chart">
+                            <div class="bar bar-in" id="chart-bar-in" style="height: 0%"></div>
+                            <div class="bar bar-out" id="chart-bar-out" style="height: 0%"></div>
+                        </div>
+                        <div class="chart-labels">
+                            <span>Bulan Ini</span>
+                        </div>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="dot bg-green"></span> Pemasukan</span>
+                            <span class="legend-item"><span class="dot bg-red"></span> Pengeluaran</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="expense-pie-card mt-4 mb-4">
+                    <h2 class="section-title"><i class="ri-pie-chart-2-line"></i> Porsi Pengeluaran</h2>
+                    <div class="pie-chart-container mt-3">
+                        <div class="pie-chart" id="expense-pie-chart"></div>
+                        <div class="pie-legend" id="expense-pie-legend">
+                            <!-- Categories legend -->
+                        </div>
+                    </div>
+                </section>
+
+                <button class="btn btn-outline btn-block mb-5"><i class="ri-download-2-line"></i> Unduh Laporan
+                    (CSV)</button>
+                <div class="spacer-bottom"></div>
+            </div>
+
+            <!-- History View -->
+            <div id="view-history" class="view">
+                <div class="history-filters mb-3">
+                    <button class="filter-chip active" onclick="app.filterHistory('all', this)">Semua</button>
+                    <button class="filter-chip" onclick="app.filterHistory('income', this)">Pemasukan</button>
+                    <button class="filter-chip" onclick="app.filterHistory('expense', this)">Pengeluaran</button>
+                </div>
+                <div class="transactions-list full-list" id="all-transactions">
+                    <!-- Transactions will be rendered here -->
+                </div>
+                <div class="spacer-bottom"></div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" data-target="home">
+                <i class="ri-home-5-line"></i>
+                <i class="ri-home-5-fill active-icon"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item" data-target="assets">
+                <i class="ri-briefcase-4-line"></i>
+                <i class="ri-briefcase-4-fill active-icon"></i>
+                <span>Assets</span>
+            </a>
+
+            <div class="nav-item fab-container">
+                <button class="fab" id="btn-add-transaction">
+                    <i class="ri-add-line"></i>
+                </button>
+            </div>
+
+            <a href="#" class="nav-item" data-target="report">
+                <i class="ri-pie-chart-2-line"></i>
+                <i class="ri-pie-chart-2-fill active-icon"></i>
+                <span>Report</span>
+            </a>
+            <a href="#" class="nav-item" data-target="history">
+                <i class="ri-receipt-line"></i>
+                <i class="ri-receipt-fill active-icon"></i>
+                <span>History</span>
+            </a>
+        </nav>
+
+        <!-- Modals -->
+        <div class="modal-overlay" id="add-wallet-modal">
+            <div class="modal-content bottom-sheet">
+                <div class="modal-header">
+                    <h3>Tambah Dompet</h3>
+                    <button class="icon-btn modal-close"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <form id="form-add-wallet">
+                        <div class="form-group">
+                            <label>Nama Dompet</label>
+                            <input type="text" id="wallet-name" placeholder="Cth: BCA, OVO, Gopay" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Kategori Dompet</label>
+                            <select id="wallet-type" required>
+                                <option value="bank">Rekening Bank</option>
+                                <option value="ewallet">E-Wallet</option>
+                                <option value="cash">Uang Tunai</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nomor Akun / No. HP (Opsional)</label>
+                            <input type="text" id="wallet-account" placeholder="Cth: 08123456789">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Saldo Awal</label>
+                            <div class="input-currency">
+                                <span>Rp</span>
+                                <input type="number" id="wallet-balance" placeholder="0" value="0" required>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-block mt-4 btn-large"
+                            onclick="app.handleWalletSubmit()">Simpan Dompet</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="add-debt-modal">
+            <div class="modal-content bottom-sheet">
+                <div class="modal-header">
+                    <h3>Catat Hutang / Piutang</h3>
+                    <button class="icon-btn modal-close"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <form id="form-add-debt">
+                        <div class="form-group">
+                            <label>Jenis Catatan</label>
+                            <select id="debt-type" required onchange="app.toggleDebtWallet()">
+                                <option value="piutang">Piutang (Orang ngutang ke saya)</option>
+                                <option value="hutang">Hutang (Saya ngutang ke orang)</option>
+                                <option value="undangan">Investasi Sosial (Undangan/Kondangan)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nama Orang / Tujuan</label>
+                            <input type="text" id="debt-name" placeholder="Cth: Mas Budi" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nomor WhatsApp (Opsional)</label>
+                            <input type="text" id="debt-phone" placeholder="Cth: 628123456789">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nominal Tunai</label>
+                            <div class="input-currency">
+                                <span>Rp</span>
+                                <input type="number" id="debt-amount" placeholder="0" value="0" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="group-debt-wallet" style="display:none;">
+                            <label>Sumber Dana (Opsional)</label>
+                            <select id="debt-wallet">
+                                <option value="">-- Hanya Catat Saja --</option>
+                                <!-- Rendered dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label>Bukti Transfer / Catatan Foto (Opsional)</label>
+                            <input type="file" id="debt-proof" accept="image/*"
+                                style="padding:10px; background:var(--bg-main); border-radius:12px; width:100%;">
+                            <img id="debt-proof-preview" src=""
+                                style="display:none; max-width:100%; margin-top:10px; border-radius:12px;">
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-block mt-4 btn-large"
+                            onclick="app.handleDebtSubmit()">Simpan Pemungutan</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="add-transaction-modal">
+            <div class="modal-content bottom-sheet">
+                <div class="modal-header">
+                    <h3>Tambah Transaksi</h3>
+                    <button class="icon-btn modal-close"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <!-- Form inside modal -->
+                    <div class="tx-type-selector mb-4">
+                        <div class="type-btn active" data-type="expense">Pengeluaran</div>
+                        <div class="type-btn" data-type="income">Pemasukan</div>
+                        <div class="type-btn" data-type="transfer">Transfer</div>
+                    </div>
+
+                    <form id="form-transaction">
+                        <div class="form-group">
+                            <label>Jumlah Nominal</label>
+                            <div class="input-currency">
+                                <span>Rp</span>
+                                <input type="number" id="tx-amount" placeholder="0" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Dompet</label>
+                                <select id="tx-wallet" required>
+                                    <!-- Options rendered dynamically -->
+                                </select>
+                            </div>
+                            <div class="form-group" id="group-category">
+                                <label>Kategori</label>
+                                <input type="text" id="tx-category" list="category-options" placeholder="Pilih atau ketik baru" required>
+                                <datalist id="category-options">
+                                    <option value="Makan & Minum"></option>
+                                    <option value="Transportasi"></option>
+                                    <option value="Tagihan"></option>
+                                    <option value="Belanja"></option>
+                                    <option value="Hiburan"></option>
+                                    <option value="Lainnya"></option>
+                                </datalist>
+                            </div>
+                        </div>
+
+                        <div id="group-transfer" style="display: none; margin-bottom: 16px;">
+                            <div class="form-row" style="margin-bottom: 8px;">
+                                <div class="form-group">
+                                    <label>No. Rekening / HP Tujuan</label>
+                                    <input type="text" id="tx-transfer-account" placeholder="Cth: 081234...">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nama Penerima</label>
+                                    <input type="text" id="tx-transfer-name" placeholder="Cth: Budi">
+                                </div>
+                            </div>
+                            <label style="font-size: 11px; margin-bottom: 4px; display: block;">Kontak Tersimpan</label>
+                            <div id="transfer-contacts-list" class="history-filters" style="padding-bottom: 8px;">
+                                <!-- Contact chips rendered here -->
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Catatan</label>
+                            <input type="text" id="tx-note" placeholder="Cth: Makan siang McD" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tanggal</label>
+                            <input type="date" id="tx-date" required>
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-block mt-4 btn-large"
+                            onclick="app.handleTransactionSubmit()">Simpan Transaksi</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Add Goal -->
+        <div class="modal-overlay" id="add-goal-modal">
+            <div class="modal-content bottom-sheet">
+                <div class="modal-header">
+                    <h3 class="modal-title">Buat Target Tabungan</h3>
+                    <button class="icon-btn btn-close-modal"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="modal-body pb-4">
+                    <form id="form-add-goal">
+                        <div class="form-group">
+                            <label>Nama Target (Contoh: Beli Motor)</label>
+                            <input type="text" id="goal-name" placeholder="Cth: Dana Darurat" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nominal Target</label>
+                            <div class="input-currency">
+                                <span>Rp</span>
+                                <input type="number" id="goal-amount" placeholder="0" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Sumber Dana (Dompet)</label>
+                                <select id="goal-wallet" required>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Target Tercapai Tanggal</label>
+                                <input type="date" id="goal-date" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-block mt-4 btn-large"
+                            onclick="app.handleGoalSubmit()">Simpan Target</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Modal: Add Asset -->
+        <div class="modal-overlay" id="add-asset-modal">
+            <div class="modal-content bottom-sheet">
+                <div class="modal-header">
+                    <h3 class="modal-title">Tambah / Edit Aset</h3>
+                    <button class="icon-btn btn-close-modal"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="modal-body pb-4">
+                    <form id="form-add-asset">
+                        <div class="form-group">
+                            <label>Nama Aset</label>
+                            <input type="text" id="asset-name" placeholder="Cth: Emas Antam, BNB, ASII" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Kategori Aset</label>
+                            <select id="asset-type" required>
+                                <option value="gold">Emas</option>
+                                <option value="crypto">Kripto</option>
+                                <option value="stock">Saham / Reksadana</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Jumlah Unit</label>
+                                <div class="input-currency">
+                                    <span><i class="ri-stack-line"></i></span>
+                                    <input type="number" id="asset-unit" step="any" placeholder="0" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Satuan (Unit)</label>
+                                <input type="text" id="asset-unit-label" placeholder="Cth: gram, lot" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Harga per Unit (Saat Ini)</label>
+                            <div class="input-currency">
+                                <span>Rp</span>
+                                <input type="number" id="asset-price" placeholder="0" required>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 24px;">
+                            <button type="button" class="btn btn-outline" id="btn-delete-asset" style="display:none; flex:1;" onclick="app.executeDeleteAsset()">Hapus</button>
+                            <button type="button" class="btn btn-primary" style="flex:2;" onclick="app.handleAssetSubmit()">Simpan Aset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="confirm-modal">
+            <div class="modal-content center-popup" style="text-align: center;">
+                <div style="font-size: 48px; color: var(--danger); margin-bottom: 16px;">
+                    <i class="ri-error-warning-line"></i>
+                </div>
+                <h3 style="margin-bottom: 8px;">Konfirmasi Hapus</h3>
+                <p id="confirm-modal-text" style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;">Apakah Anda yakin?</p>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-outline" style="flex: 1;" onclick="app.closeModals()">Batal</button>
+                    <button class="btn" style="flex: 1; background: var(--danger); color: white;" id="confirm-modal-yes" onclick="app.executeConfirm()">Ya, Hapus</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Force unregister ANY lingering service workers and delete ALL caches
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                for (let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+        if ('caches' in window) {
+            caches.keys().then(function (names) {
+                for (let name of names) caches.delete(name);
+            });
+        }
+    </script>
+</body>
+
+</html>
