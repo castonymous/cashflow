@@ -167,7 +167,22 @@ class AppController {
         this.render(); // Re-render to show new wallet
         return false; // Prevent form acting default
     }
-
+    
+    deleteWallet(id, event) {
+        if (event) event.stopPropagation(); // Mencegah bentrok saat klik area kartu
+        if(confirm('Apakah Anda yakin ingin menghapus dompet ini? Semua aset di dalamnya ikut terhapus dari daftar utama.')) {
+            const success = db.deleteWallet(id);
+            if(!success) {
+                alert('Dompet sistem utama tidak bisa dihapus!');
+            } else {
+                this.render();
+                if(this.currentView === 'wallet-category') {
+                     this.renderCategoryWallets();
+                }
+            }
+        }
+    }
+    
     handleTransactionSubmit() {
         const amount = document.getElementById('tx-amount').value;
         const walletId = document.getElementById('tx-wallet').value;
@@ -235,8 +250,9 @@ class AppController {
                     <span class="amount">${this.displayMoney(w.balance)}</span>
                 </div>
             </div>
-        `).join('');
-        document.getElementById('wallets-grid-secondary').innerHTML = secondaryWalletsHTML;
+            `;
+        }).join('');
+        document.getElementById('wallets-grid-main').innerHTML = mainWalletsHTML;
 
         // Assets Mini Grid
         const assetsHTML = db.data.assets.map(a => `
@@ -255,7 +271,38 @@ class AppController {
         const recentTx = db.data.transactions.slice(0, 5).map(tx => this.generateTxHTML(tx)).join('');
         document.getElementById('recent-transactions').innerHTML = recentTx || '<div class="text-center text-muted pt-3">Belum ada transaksi</div>';
     }
+    
+       renderCategoryWallets() {
+        const filteredW = db.data.wallets.filter(w => w.type === this.currentWalletCategory);
+        
+        const walletListHTML = filteredW.length > 0 ? filteredW.map(w => {
+            const chipHTML = w.type !== 'cash' ? `<div class="card-chip"></div>` : '';
+            const hideDelete = (w.id === 'hutang' || w.id === 'piutang') ? 'style="display:none;"' : '';
+            
+            return `
+            <div class="wallet-detail-card ${w.theme}">
+                <button class="btn-delete-wallet" onclick="app.deleteWallet('${w.id}', event)" ${hideDelete} title="Hapus Dompet">
+                    <i class="ri-delete-bin-line"></i>
+                </button>
+                ${chipHTML}
+                <div class="card-label">Saldo Aktif</div>
+                <div class="card-balance">${this.displayMoney(w.balance)}</div>
+                
+                <div class="card-footer">
+                    <div>
+                        <div class="card-name">${w.name}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="card-account">${w.account ? w.account : '----'}</div>
+                    </div>
+                </div>
+            </div>
+            `;
+        }).join('') : '<div class="text-center text-muted" style="padding:40px 0;">Belum ada dompet di kategori ini.</div>';
 
+        document.getElementById('category-wallets-list').innerHTML = walletListHTML;
+    }
+    
     renderAssets() {
         // Management Wallets (Custom)
         const mainW = db.data.wallets.filter(w => !['debt', 'receivable'].includes(w.type));
