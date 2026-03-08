@@ -334,24 +334,6 @@
 
     <script src="data.js"></script>
     <script src="app.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            // FORCE UNREGISTER OLD SERVICE WORKER TO CLEAR CACHE HANGS
-            navigator.serviceWorker.getRegistrations().then(function (registrations) {
-                for (let registration of registrations) {
-                    registration.unregister();
-                    console.log('ServiceWorker unregistered to clear cache');
-                }
-            });
-
-            // Temporary disable SW registration for local development to avoid caching issues
-            // window.addEventListener('load', () => {
-            //     navigator.serviceWorker.register('sw.js').then(reg => {
-            //         console.log('SW registered!', reg);
-            //     }).catch(err => console.log('SW registration failed', err));
-            // });
-        }
-    </script>
 </body>
 
 </html>
