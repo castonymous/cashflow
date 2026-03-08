@@ -39,7 +39,28 @@ class AppController {
         this.formWallet = document.getElementById('form-add-wallet');
         this.txTypeBtns = document.querySelectorAll('.type-btn');
         this.txWalletSelect = document.getElementById('tx-wallet');
+        this.walletTabBtns = document.querySelectorAll('.wallet-tab-btn');
         this.currentTxType = 'expense';
+        this.currentWalletCategory = 'ewallet';
+        
+        // Debt
+        this.modalAddDebt = document.getElementById('add-debt-modal');
+        this.formDebt = document.getElementById('form-add-debt');
+        const debtProof = document.getElementById('debt-proof');
+        if(debtProof) {
+            debtProof.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = document.getElementById('debt-proof-preview');
+                        img.src = e.target.result;
+                        img.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
     }
 
     bindEvents() {
@@ -65,10 +86,6 @@ class AppController {
         });
 
         // Modals Add Wallet
-        this.btnAddWallet.addEventListener('click', () => {
-            this.openModal(this.modalAddWallet);
-        });
-
         this.btnCloses.forEach(btn => btn.addEventListener('click', () => this.closeModals()));
 
         // Close on overlay click
@@ -119,7 +136,8 @@ class AppController {
             'home': 'Beranda',
             'assets': 'Portofolio',
             'report': 'Laporan',
-            'history': 'Riwayat'
+            'history': 'Riwayat',
+            'wallet-category': 'Kategori Dompet'
         };
         this.pageTitle.innerText = titles[viewId] || 'Beranda';
 
@@ -149,8 +167,18 @@ class AppController {
     closeModals() {
         this.modalAdd.classList.remove('active');
         this.modalAddWallet.classList.remove('active');
+        if(this.modalAddDebt) this.modalAddDebt.classList.remove('active');
+
         if (this.formTx) this.formTx.reset();
         if (this.formWallet) this.formWallet.reset();
+        if (this.formDebt) {
+            this.formDebt.reset();
+            const preview = document.getElementById('debt-proof-preview');
+            if(preview) {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
+        }
         document.getElementById('tx-date').valueAsDate = new Date();
     }
 
@@ -158,16 +186,24 @@ class AppController {
         const name = document.getElementById('wallet-name').value;
         const type = document.getElementById('wallet-type').value;
         const balance = document.getElementById('wallet-balance').value;
+        const account = document.getElementById('wallet-account').value;
 
         if (!name) return alert('Nama dompet harus diisi!');
 
-        db.addWallet(name, type, balance);
+        db.addWallet(name, type, balance, account);
 
         this.closeModals();
+        
         this.render(); // Re-render to show new wallet
+        
+        // If we are currently in wallet-category view, re-render it
+        if(this.currentView === 'wallet-category') {
+             this.renderCategoryWallets();
+        }
+
         return false; // Prevent form acting default
     }
-    
+
     deleteWallet(id, event) {
         if (event) event.stopPropagation(); // Mencegah bentrok saat klik area kartu
         if(confirm('Apakah Anda yakin ingin menghapus dompet ini? Semua aset di dalamnya ikut terhapus dari daftar utama.')) {
@@ -182,7 +218,37 @@ class AppController {
             }
         }
     }
-    
+
+    openDebtModal() {
+        this.openModal(this.modalAddDebt);
+    }
+
+    async handleDebtSubmit() {
+        const type = document.getElementById('debt-type').value;
+        const name = document.getElementById('debt-name').value;
+        const phone = document.getElementById('debt-phone').value;
+        const amount = document.getElementById('debt-amount').value;
+        const proofImgSrc = document.getElementById('debt-proof-preview').src;
+
+        if (!name) return alert('Nama tujuan harus diisi!');
+        if (!amount || amount <= 0) return alert('Masukkan nominal yang valid!');
+
+        // Determine if valid base64 image or just current pagelink (empty)
+        const finalImage = proofImgSrc.startsWith('data:image') ? proofImgSrc : '';
+
+        db.addDebt(type, name, phone, amount, finalImage);
+
+        this.closeModals();
+        this.render(); // Re-render to update
+    }
+
+    resolveDebt(id) {
+        if(confirm('Apakah Anda yakin menandai catatan ini sebagai Selesai / Lunas?')) {
+            db.resolveDebt(id);
+            this.render();
+        }
+    }
+
     handleTransactionSubmit() {
         const amount = document.getElementById('tx-amount').value;
         const walletId = document.getElementById('tx-wallet').value;
@@ -230,16 +296,27 @@ class AppController {
         document.getElementById('total-wallet').innerText = this.displayMoney(nw.wallets);
         document.getElementById('total-investment').innerText = this.displayMoney(nw.investment);
 
-        // Wallets
-        const mainWalletsHTML = db.data.wallets.filter(w => !['debt', 'receivable'].includes(w.type)).map(w => `
-            <div class="wallet-card ${w.theme}">
-                <div class="wallet-icon"><i class="${w.icon}"></i></div>
+        // Wallets (Accumulated by Category)
+        const categories = [
+            { id: 'ewallet', name: 'E-Wallet', theme: 'theme-purple', icon: 'ri-smartphone-line' },
+            { id: 'bank', name: 'Rekening', theme: 'theme-blue', icon: 'ri-bank-card-line' },
+            { id: 'cash', name: 'Tunai', theme: 'theme-green', icon: 'ri-money-dollar-circle-line' }
+        ];
+
+        const mainWalletsHTML = categories.map(cat => {
+            const wallets = db.data.wallets.filter(w => w.type === cat.id);
+            if (wallets.length === 0) return ''; // Hide category if empty
+            const sum = wallets.reduce((acc, curr) => acc + curr.balance, 0);
+            return `
+            <div class="wallet-card ${cat.theme}">
+                <div class="wallet-icon"><i class="${cat.icon}"></i></div>
                 <div class="wallet-info mt-2">
-                    <span class="label">${w.name}</span>
-                    <span class="amount">${this.displayMoney(w.balance)}</span>
+                    <span class="label">${cat.name}</span>
+                    <span class="amount">${this.displayMoney(sum)}</span>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
         document.getElementById('wallets-grid-main').innerHTML = mainWalletsHTML;
 
         const secondaryWalletsHTML = db.data.wallets.filter(w => ['debt', 'receivable'].includes(w.type)).map(w => `
@@ -250,9 +327,8 @@ class AppController {
                     <span class="amount">${this.displayMoney(w.balance)}</span>
                 </div>
             </div>
-            `;
-        }).join('');
-        document.getElementById('wallets-grid-main').innerHTML = mainWalletsHTML;
+        `).join('');
+        document.getElementById('wallets-grid-secondary').innerHTML = secondaryWalletsHTML;
 
         // Assets Mini Grid
         const assetsHTML = db.data.assets.map(a => `
@@ -271,8 +347,20 @@ class AppController {
         const recentTx = db.data.transactions.slice(0, 5).map(tx => this.generateTxHTML(tx)).join('');
         document.getElementById('recent-transactions').innerHTML = recentTx || '<div class="text-center text-muted pt-3">Belum ada transaksi</div>';
     }
-    
-       renderCategoryWallets() {
+
+    openCategoryView(categoryId, categoryName) {
+        this.currentWalletCategory = categoryId;
+        document.getElementById('category-title').innerText = categoryName;
+        this.navigate('wallet-category');
+        this.renderCategoryWallets();
+    }
+
+    openCategoryAdd() {
+        document.getElementById('wallet-type').value = this.currentWalletCategory;
+        this.openModal(this.modalAddWallet);
+    }
+
+    renderCategoryWallets() {
         const filteredW = db.data.wallets.filter(w => w.type === this.currentWalletCategory);
         
         const walletListHTML = filteredW.length > 0 ? filteredW.map(w => {
@@ -302,26 +390,74 @@ class AppController {
 
         document.getElementById('category-wallets-list').innerHTML = walletListHTML;
     }
-    
+
     renderAssets() {
-        // Management Wallets (Custom)
-        const mainW = db.data.wallets.filter(w => !['debt', 'receivable'].includes(w.type));
-        const walletListHTML = mainW.length > 0 ? mainW.map(w => `
-            <div class="list-item-card" style="padding: 12px; margin-bottom: 8px;">
-                <div class="asset-icon ${w.theme}" style="background-color: var(--${w.theme.split('-')[1]}-light); color: var(--${w.theme.split('-')[1]}); width: 40px; height: 40px; font-size: 20px;">
-                    <i class="${w.icon}"></i>
+        // Management Wallets Menu
+        const categories = [
+            { id: 'ewallet', name: 'E-Wallet', theme: 'theme-purple', icon: 'ri-smartphone-line' },
+            { id: 'bank', name: 'Rekening Bank', theme: 'theme-blue', icon: 'ri-bank-card-line' },
+            { id: 'cash', name: 'Uang Tunai', theme: 'theme-green', icon: 'ri-money-dollar-circle-line' }
+        ];
+
+        const menuHTML = categories.map(cat => {
+            const wallets = db.data.wallets.filter(w => w.type === cat.id);
+            const sum = wallets.reduce((acc, curr) => acc + curr.balance, 0);
+            
+            return `
+            <div class="list-item-card" style="padding: 16px; margin-bottom: 12px; cursor: pointer;" onclick="app.openCategoryView('${cat.id}', '${cat.name}')">
+                <div class="asset-icon ${cat.theme}" style="background-color: var(--${cat.theme.split('-')[1]}-light); color: var(--${cat.theme.split('-')[1]}); width: 48px; height: 48px; font-size: 24px;">
+                    <i class="${cat.icon}"></i>
                 </div>
                 <div class="list-item-content">
-                    <div class="list-item-title" style="font-size: 14px;">${w.name}</div>
-                    <div class="list-item-subtitle" style="font-size: 10px; text-transform: uppercase;">${w.type}</div>
+                    <div class="list-item-title" style="font-size: 16px;">${cat.name}</div>
+                    <div class="list-item-subtitle" style="font-size: 11px;">${wallets.length} Dompet</div>
                 </div>
                 <div class="list-item-value">
-                    <div class="list-item-amount" style="font-size: 14px;">${this.displayMoney(w.balance)}</div>
+                    <div class="list-item-amount" style="font-size: 15px;">${this.displayMoney(sum)}</div>
+                    <div style="font-size: 10px; color: var(--text-muted); text-align: right; margin-top:4px;">Lihat Detail <i class="ri-arrow-right-s-line"></i></div>
                 </div>
             </div>
-        `).join('') : '<div class="text-center text-muted">Belum ada dompet.</div>';
+            `;
+        }).join('');
 
-        document.getElementById('manage-wallets-list').innerHTML = walletListHTML;
+        document.getElementById('manage-wallets-list').innerHTML = menuHTML;
+
+        // Debt Management
+        const debtsHTML = db.data.debts.map(d => {
+            const isHutang = d.type === 'hutang';
+            const iconClass = isHutang ? 'ri-arrow-down-circle-line text-red' : 'ri-arrow-up-circle-line text-green';
+            const typeText = isHutang ? 'Hutang' : 'Piutang';
+            const phoneStr = d.phone ? d.phone.replace(/[^0-9]/g, '') : '';
+            const phoneLink = phoneStr ? `<a href="https://wa.me/${phoneStr.startsWith('0') ? '62' + phoneStr.substring(1) : phoneStr}" target="_blank" class="btn btn-small btn-outline mt-2" style="display:inline-flex; align-items:center; gap:4px; padding:6px 10px; font-size:11px;"><i class="ri-whatsapp-line text-green" style="font-size:14px;"></i> Chat WA</a>` : '';
+            const proofHTML = d.proofImage ? `<div class="mt-2 text-blue" style="font-size:11px; cursor:pointer;" onclick="window.open('${d.proofImage}', '_blank')"><i class="ri-image-line"></i> Lihat Bukti</div>` : '';
+
+            return `
+            <div class="list-item-card" style="flex-direction: column; align-items: flex-start;">
+                <div style="display:flex; width:100%; justify-content:space-between; align-items:flex-start;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <i class="${iconClass}" style="font-size:24px;"></i>
+                        <div>
+                            <div class="list-item-title">${d.name}</div>
+                            <div class="list-item-subtitle">${typeText} • ${new Date(d.date).toLocaleDateString('id-ID')}</div>
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="list-item-amount ${isHutang ? 'text-red' : 'text-green'}">${this.displayMoney(d.amount)}</div>
+                        <button class="btn btn-small mt-1" style="background:var(--success-light); color:var(--success); padding:4px 8px;" onclick="app.resolveDebt('${d.id}')"><i class="ri-check-line"></i> Lunas</button>
+                    </div>
+                </div>
+                <div style="display:flex; gap:12px;">
+                    ${phoneLink}
+                    ${proofHTML}
+                </div>
+            </div>
+            `;
+        }).join('');
+
+        const debtListEl = document.getElementById('debt-list');
+        if(debtListEl) {
+            debtListEl.innerHTML = debtsHTML || '<div class="text-center text-muted" style="padding:20px 0;">Belum ada catatan hutang/piutang aktif.</div>';
+        }
 
         // Actual Assets
         const listHTML = db.data.assets.map(a => `

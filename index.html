@@ -92,8 +92,6 @@
                 <section class="wallets-management-card mt-3">
                     <div class="portfolio-header mb-3">
                         <h2 class="section-title"><i class="ri-wallet-3-line"></i> Manajemen Dompet</h2>
-                        <button class="btn btn-small btn-outline" id="btn-add-wallet"><i class="ri-add-line"></i>
-                            Tambah</button>
                     </div>
 
                     <div class="assets-list" id="manage-wallets-list">
@@ -111,11 +109,36 @@
                     </div>
                 </section>
 
+                <section class="debt-management-card mt-5">
+                    <div class="portfolio-header">
+                        <h2 class="section-title"><i class="ri-hand-coin-line"></i> Hutang & Piutang</h2>
+                        <button class="btn btn-small btn-outline text-red" onclick="app.openDebtModal()"><i class="ri-add-line"></i> Catat Baru</button>
+                    </div>
+                    <div class="assets-list mt-3" id="debt-list">
+                        <!-- Custom debts will be rendered here -->
+                    </div>
+                </section>
+
                 <div class="action-buttons-grid mt-4">
                     <button class="btn btn-dark btn-large"><i class="ri-shopping-cart-2-line"></i> Beli Aset</button>
                     <button class="btn btn-outline btn-large"><i class="ri-money-dollar-circle-line"></i> Jual
                         Aset</button>
                 </div>
+                <div class="spacer-bottom"></div>
+            </div>
+
+            <!-- View: Wallet Category Detail -->
+            <div id="view-wallet-category" class="view">
+                <div class="header category-header" style="padding: 24px 0 16px; margin-top: -24px; position: sticky; top: -24px; background: var(--bg-main); z-index: 10; display: flex; align-items: center; border-bottom: 1px solid var(--border);">
+                    <button class="icon-btn" onclick="app.navigate('assets')"><i class="ri-arrow-left-s-line" style="font-size:24px;"></i></button>
+                    <h2 class="section-title" id="category-title" style="margin-left: 16px; flex:1;">Kategori</h2>
+                    <button class="btn btn-small btn-primary" onclick="app.openCategoryAdd()"><i class="ri-add-line"></i> Tambah</button>
+                </div>
+
+                <div class="assets-list mt-4" id="category-wallets-list">
+                    <!-- Credit cards rendered here -->
+                </div>
+                
                 <div class="spacer-bottom"></div>
             </div>
 
@@ -257,6 +280,11 @@
                         </div>
 
                         <div class="form-group">
+                            <label>Nomor Akun / No. HP (Opsional)</label>
+                            <input type="text" id="wallet-account" placeholder="Cth: 08123456789">
+                        </div>
+
+                        <div class="form-group">
                             <label>Saldo Awal</label>
                             <div class="input-currency">
                                 <span>Rp</span>
@@ -266,6 +294,53 @@
 
                         <button type="button" class="btn btn-primary btn-block mt-4 btn-large"
                             onclick="app.handleWalletSubmit()">Simpan Dompet</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="add-debt-modal">
+            <div class="modal-content bottom-sheet">
+                <div class="modal-header">
+                    <h3>Catat Hutang / Piutang</h3>
+                    <button class="icon-btn modal-close"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <form id="form-add-debt">
+                        <div class="form-group">
+                            <label>Jenis Catatan</label>
+                            <select id="debt-type" required>
+                                <option value="piutang">Piutang (Orang ngutang ke saya)</option>
+                                <option value="hutang">Hutang (Saya ngutang ke orang)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nama Orang / Tujuan</label>
+                            <input type="text" id="debt-name" placeholder="Cth: Mas Budi" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nomor WhatsApp (Opsional)</label>
+                            <input type="text" id="debt-phone" placeholder="Cth: 628123456789">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nominal Tunai</label>
+                            <div class="input-currency">
+                                <span>Rp</span>
+                                <input type="number" id="debt-amount" placeholder="0" value="0" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label>Bukti Transfer / Catatan Foto (Opsional)</label>
+                            <input type="file" id="debt-proof" accept="image/*" style="padding:10px; background:var(--bg-main); border-radius:12px; width:100%;">
+                            <img id="debt-proof-preview" src="" style="display:none; max-width:100%; margin-top:10px; border-radius:12px;">
+                        </div>
+
+                        <button type="button" class="btn btn-primary btn-block mt-4 btn-large"
+                            onclick="app.handleDebtSubmit()">Simpan Pemungutan</button>
                     </form>
                 </div>
             </div>
@@ -334,6 +409,21 @@
 
     <script src="data.js"></script>
     <script src="app.js"></script>
+    <script>
+        // Force unregister ANY lingering service workers and delete ALL caches
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                for (let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+        if ('caches' in window) {
+            caches.keys().then(function (names) {
+                for (let name of names) caches.delete(name);
+            });
+        }
+    </script>
 </body>
 
 </html>

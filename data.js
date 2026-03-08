@@ -5,12 +5,13 @@ const STORAGE_KEY = 'cashflow_tracker_data';
 // Default initial state if empty
 const defaultData = {
     wallets: [
-        { id: 'tunai', name: 'Tunai', balance: 0, type: 'cash', theme: 'theme-green', icon: 'ri-money-dollar-circle-line' },
-        { id: 'rekening_utama', name: 'Rekening Utama', balance: 0, type: 'bank', theme: 'theme-blue', icon: 'ri-bank-card-line' },
-        { id: 'ewallet', name: 'E-Wallet', balance: 0, type: 'ewallet', theme: 'theme-purple', icon: 'ri-smartphone-line' },
-        { id: 'hutang', name: 'Hutang Saya', balance: 0, type: 'debt', theme: 'theme-red', icon: 'ri-arrow-down-circle-line' },
-        { id: 'piutang', name: 'Piutang Orang', balance: 0, type: 'receivable', theme: 'theme-green', icon: 'ri-arrow-up-circle-line' }
+        { id: 'tunai', name: 'Tunai', balance: 0, type: 'cash', theme: 'theme-green', icon: 'ri-money-dollar-circle-line', account: '' },
+        { id: 'rekening_utama', name: 'Rekening Utama', balance: 0, type: 'bank', theme: 'theme-blue', icon: 'ri-bank-card-line', account: '1234567890' },
+        { id: 'ewallet', name: 'E-Wallet', balance: 0, type: 'ewallet', theme: 'theme-purple', icon: 'ri-smartphone-line', account: '08123456789' },
+        { id: 'hutang', name: 'Hutang Saya', balance: 0, type: 'debt', theme: 'theme-red', icon: 'ri-arrow-down-circle-line', account: '' },
+        { id: 'piutang', name: 'Piutang Orang', balance: 0, type: 'receivable', theme: 'theme-green', icon: 'ri-arrow-up-circle-line', account: '' }
     ],
+    debts: [],
     assets: [
         { id: 'emas', name: 'Emas', unit: 0, price: 1250000, type: 'gold', theme: 'theme-gold', icon: 'ri-vip-diamond-line', unitLabel: 'gr' },
         { id: 'crypto', name: 'Kripto (BTC)', unit: 0, price: 1050000000, type: 'crypto', theme: 'theme-blue', icon: 'ri-bit-coin-line', unitLabel: 'BTC' },
@@ -94,7 +95,7 @@ class DataService {
             investment: totalInvestment
         };
     }
- addWallet(name, type, balance) {
+    addWallet(name, type, balance, account) {
         // Tentukan tema dan icon berdasarkan tipe dompet
         let theme = 'theme-blue';
         let icon = 'ri-wallet-3-line';
@@ -116,12 +117,59 @@ class DataService {
             type: type,
             balance: parseFloat(balance) || 0,
             theme: theme,
-            icon: icon
+            icon: icon,
+            account: account || ''
         };
 
         this.data.wallets.push(newWallet);
         this.saveData();
         return newWallet;
+    }
+
+    deleteWallet(id) {
+        // Mencegah penghapusan dompet default sistem (Hutang & Piutang)
+        if (id === 'hutang' || id === 'piutang') return false;
+        
+        this.data.wallets = this.data.wallets.filter(w => w.id !== id);
+        this.saveData();
+        return true;
+    }
+
+    addDebt(type, name, phone, amount, proofImage) {
+        const debt = {
+            id: 'debt_' + Date.now(),
+            type: type, // 'hutang' or 'piutang'
+            name: name,
+            phone: phone,
+            amount: parseFloat(amount) || 0,
+            proofImage: proofImage, // base64
+            date: new Date().toISOString()
+        };
+        this.data.debts.push(debt);
+        this.recalculateDebtWallets();
+        return debt;
+    }
+
+    resolveDebt(id) {
+        this.data.debts = this.data.debts.filter(d => d.id !== id);
+        this.recalculateDebtWallets();
+    }
+
+    recalculateDebtWallets() {
+        const hutangWallet = this.data.wallets.find(w => w.id === 'hutang');
+        const piutangWallet = this.data.wallets.find(w => w.id === 'piutang');
+
+        if(hutangWallet) {
+            hutangWallet.balance = this.data.debts
+                .filter(d => d.type === 'hutang')
+                .reduce((acc, curr) => acc + curr.amount, 0);
+        }
+        if(piutangWallet) {
+            piutangWallet.balance = this.data.debts
+                .filter(d => d.type === 'piutang')
+                .reduce((acc, curr) => acc + curr.amount, 0);
+        }
+        this.saveData();
     }
     addTransaction(tx) {
         const newTx = {
