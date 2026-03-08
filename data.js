@@ -94,7 +94,35 @@ class DataService {
             investment: totalInvestment
         };
     }
+ addWallet(name, type, balance) {
+        // Tentukan tema dan icon berdasarkan tipe dompet
+        let theme = 'theme-blue';
+        let icon = 'ri-wallet-3-line';
 
+        if (type === 'cash') {
+            theme = 'theme-green';
+            icon = 'ri-money-dollar-circle-line';
+        } else if (type === 'ewallet') {
+            theme = 'theme-purple';
+            icon = 'ri-smartphone-line';
+        } else if (type === 'bank') {
+            theme = 'theme-blue';
+            icon = 'ri-bank-card-line';
+        }
+
+        const newWallet = {
+            id: 'wallet_' + Date.now(), // Buat ID unik
+            name: name,
+            type: type,
+            balance: parseFloat(balance) || 0,
+            theme: theme,
+            icon: icon
+        };
+
+        this.data.wallets.push(newWallet);
+        this.saveData();
+        return newWallet;
+    }
     addTransaction(tx) {
         const newTx = {
             id: Date.now().toString(),
