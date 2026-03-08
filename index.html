@@ -112,7 +112,8 @@
                 <section class="debt-management-card mt-5">
                     <div class="portfolio-header">
                         <h2 class="section-title"><i class="ri-hand-coin-line"></i> Hutang & Piutang</h2>
-                        <button class="btn btn-small btn-outline text-red" onclick="app.openDebtModal()"><i class="ri-add-line"></i> Catat Baru</button>
+                        <button class="btn btn-small btn-outline text-red" onclick="app.openDebtModal()"><i
+                                class="ri-add-line"></i> Catat Baru</button>
                     </div>
                     <div class="assets-list mt-3" id="debt-list">
                         <!-- Custom debts will be rendered here -->
@@ -129,16 +130,19 @@
 
             <!-- View: Wallet Category Detail -->
             <div id="view-wallet-category" class="view">
-                <div class="header category-header" style="padding: 24px 0 16px; margin-top: -24px; position: sticky; top: -24px; background: var(--bg-main); z-index: 10; display: flex; align-items: center; border-bottom: 1px solid var(--border);">
-                    <button class="icon-btn" onclick="app.navigate('assets')"><i class="ri-arrow-left-s-line" style="font-size:24px;"></i></button>
+                <div class="header category-header"
+                    style="padding: 24px 0 16px; margin-top: -24px; position: sticky; top: -24px; background: var(--bg-main); z-index: 10; display: flex; align-items: center; border-bottom: 1px solid var(--border);">
+                    <button class="icon-btn" onclick="app.navigate('assets')"><i class="ri-arrow-left-s-line"
+                            style="font-size:24px;"></i></button>
                     <h2 class="section-title" id="category-title" style="margin-left: 16px; flex:1;">Kategori</h2>
-                    <button class="btn btn-small btn-primary" onclick="app.openCategoryAdd()"><i class="ri-add-line"></i> Tambah</button>
+                    <button class="btn btn-small btn-primary" onclick="app.openCategoryAdd()"><i
+                            class="ri-add-line"></i> Tambah</button>
                 </div>
 
                 <div class="assets-list mt-4" id="category-wallets-list">
                     <!-- Credit cards rendered here -->
                 </div>
-                
+
                 <div class="spacer-bottom"></div>
             </div>
 
@@ -335,8 +339,10 @@
 
                         <div class="form-group mt-3">
                             <label>Bukti Transfer / Catatan Foto (Opsional)</label>
-                            <input type="file" id="debt-proof" accept="image/*" style="padding:10px; background:var(--bg-main); border-radius:12px; width:100%;">
-                            <img id="debt-proof-preview" src="" style="display:none; max-width:100%; margin-top:10px; border-radius:12px;">
+                            <input type="file" id="debt-proof" accept="image/*"
+                                style="padding:10px; background:var(--bg-main); border-radius:12px; width:100%;">
+                            <img id="debt-proof-preview" src=""
+                                style="display:none; max-width:100%; margin-top:10px; border-radius:12px;">
                         </div>
 
                         <button type="button" class="btn btn-primary btn-block mt-4 btn-large"
