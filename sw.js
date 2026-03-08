@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cashflow-v2';
+const CACHE_NAME = 'cashflow-v3';
 const ASSETS = [
     '/',
     '/index.html',
@@ -31,11 +31,16 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    // Network-First Strategy
     event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                // Return cache or fetch new from network, but fetch anew if not in cache
-                return response || fetch(event.request);
+        fetch(event.request)
+            .then((networkResponse) => {
+                // Return fresh network response, optionally we could cache it here
+                return networkResponse;
+            })
+            .catch(() => {
+                // If offline or network fails, fallback to cache
+                return caches.match(event.request);
             })
     );
 });

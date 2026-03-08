@@ -14,10 +14,13 @@ const defaultData = {
     debts: [],
     assets: [
         { id: 'emas', name: 'Emas', unit: 0, price: 1250000, type: 'gold', theme: 'theme-gold', icon: 'ri-vip-diamond-line', unitLabel: 'gr' },
-        { id: 'crypto', name: 'Kripto (BTC)', unit: 0, price: 1050000000, type: 'crypto', theme: 'theme-blue', icon: 'ri-bit-coin-line', unitLabel: 'BTC' },
+        { id: 'crypto', name: 'Kripto', unit: 0, price: 1050000000, type: 'crypto', theme: 'theme-blue', icon: 'ri-bit-coin-line', unitLabel: 'coin' },
         { id: 'saham', name: 'Saham', unit: 0, price: 0, type: 'stock', theme: 'theme-green', icon: 'ri-stock-line', unitLabel: 'lot' }
     ],
     transactions: [],
+    categories: ['Makan & Minum', 'Transportasi', 'Tagihan', 'Belanja', 'Hiburan', 'Lainnya'],
+    contacts: [],
+    goals: [],
     budget: {
         target: 3000000
     }
@@ -31,7 +34,24 @@ class DataService {
     loadData() {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
-            return JSON.parse(stored);
+            const loaded = JSON.parse(stored);
+            // Initialize categories if they don't exist in loaded data (for backward compatibility)
+            if(!loaded.categories) {
+                loaded.categories = [...defaultData.categories];
+                this.data = loaded;
+                this.saveData();
+            }
+            if(!loaded.contacts) {
+                loaded.contacts = [];
+                this.data = loaded;
+                this.saveData();
+            }
+            if(!loaded.goals) {
+                loaded.goals = [];
+                this.data = loaded;
+                this.saveData();
+            }
+            return loaded;
         }
         this.saveData(defaultData);
         return { ...defaultData };
@@ -40,6 +60,40 @@ class DataService {
     saveData(data = this.data) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         this.data = data;
+    }
+
+    addCategory(name) {
+        if (!this.data.categories.includes(name)) {
+            this.data.categories.push(name);
+            this.saveData();
+        }
+    }
+
+    addContact(name, account) {
+        if (!name || !account) return;
+        // Remove existing if matching account to put it at the front (recent)
+        this.data.contacts = this.data.contacts.filter(c => c.account !== account);
+        this.data.contacts.unshift({
+            id: 'c_' + Date.now(),
+            name: name,
+            account: account,
+            lastUsed: Date.now()
+        });
+        // Limit to 20 recent contacts to prevent overflow
+        if (this.data.contacts.length > 20) this.data.contacts.pop();
+        this.saveData();
+    }
+
+    addGoal(name, targetAmount, walletId, targetDate) {
+        this.data.goals.push({
+            id: 'g_' + Date.now(),
+            name,
+            targetAmount: parseFloat(targetAmount),
+            walletId,
+            targetDate,
+            createdAt: new Date().toISOString()
+        });
+        this.saveData();
     }
 
     formatCurrency(amount) {
@@ -52,8 +106,15 @@ class DataService {
 
     async fetchLiveMarket() {
         try {
-            // Fetching Gold & Crypto (BTC) prices from a public API mock/CoinGecko
-            // Using CoinGecko for BTC to IDR
+            // Apply slight random fluctuations to all dynamic assets to simulate live market
+            // In a real app, you would fetch real tickers based on the asset's specific ticker symbol
+            this.data.assets.forEach(a => {
+                const variance = (Math.random() * 0.02) - 0.01; // +/- 1%
+                a.price = Math.round(a.price * (1 + variance));
+            });
+            this.saveData();
+
+            // Attempt BTC fetch just for the main Kripto if it exists
             const resBtc = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=idr');
             if (resBtc.ok) {
                 const dataBtc = await resBtc.json();
@@ -63,15 +124,6 @@ class DataService {
                     this.data.assets[btcIndex].price = btcToIdr;
                     this.saveData();
                 }
-            }
-            // For gold, usually public APIs require auth. Let's mock a daily fluctuation for demo.
-            const goldIndex = this.data.assets.findIndex(a => a.id === 'emas');
-            if (goldIndex > -1) {
-                // Static 1,250,000 +/- random small var
-                const base = 1250000;
-                const variance = Math.floor(Math.random() * 20000) - 10000;
-                this.data.assets[goldIndex].price = base + variance;
-                this.saveData();
             }
         } catch (e) {
             console.error("Failed to fetch live market", e);
@@ -135,6 +187,63 @@ class DataService {
         return true;
     }
 
+    updateWallet(id, name, type, balance, account) {
+        const wallet = this.data.wallets.find(w => w.id === id);
+        if(wallet) {
+            wallet.name = name;
+            wallet.type = type;
+            wallet.balance = parseFloat(balance) || 0;
+            wallet.account = account || '';
+            
+            // Set default theme styling based on type
+            if (type === 'ewallet') { wallet.theme = 'theme-purple'; wallet.icon = 'ri-smartphone-line'; }
+            else if (type === 'bank') { wallet.theme = 'theme-blue'; wallet.icon = 'ri-bank-card-line'; }
+            else { wallet.theme = 'theme-green'; wallet.icon = 'ri-money-dollar-circle-line'; }
+            
+            this.saveData();
+            return true;
+        }
+        return false;
+    }
+
+    addAsset(name, type, unit, unitLabel, price) {
+        let theme = 'theme-yellow', icon = 'ri-vip-crown-line';
+        if (type === 'crypto') { theme = 'theme-orange'; icon = 'ri-bit-coin-line'; }
+        else if (type === 'stock') { theme = 'theme-blue'; icon = 'ri-line-chart-line'; }
+
+        const newAsset = {
+            id: 'asset_' + Date.now(),
+            type, name, unit: parseFloat(unit) || 0,
+            unitLabel, price: parseFloat(price) || 0,
+            theme, icon
+        };
+        this.data.assets.push(newAsset);
+        this.saveData();
+        return newAsset;
+    }
+
+    updateAsset(id, name, type, unit, unitLabel, price) {
+        const asset = this.data.assets.find(a => a.id === id);
+        if (asset) {
+            asset.name = name;
+            asset.type = type;
+            asset.unit = parseFloat(unit) || 0;
+            asset.unitLabel = unitLabel;
+            asset.price = parseFloat(price) || 0;
+            if (type === 'crypto') { asset.theme = 'theme-orange'; asset.icon = 'ri-bit-coin-line'; }
+            else if (type === 'stock') { asset.theme = 'theme-blue'; asset.icon = 'ri-line-chart-line'; }
+            else { asset.theme = 'theme-yellow'; asset.icon = 'ri-vip-crown-line'; }
+            this.saveData();
+            return true;
+        }
+        return false;
+    }
+
+    deleteAsset(id) {
+        this.data.assets = this.data.assets.filter(a => a.id !== id);
+        this.saveData();
+    }
+
     addDebt(type, name, phone, amount, proofImage) {
         const debt = {
             id: 'debt_' + Date.now(),
@@ -143,6 +252,7 @@ class DataService {
             phone: phone,
             amount: parseFloat(amount) || 0,
             proofImage: proofImage, // base64
+            status: 'pending', // 'pending' or 'paid'
             date: new Date().toISOString()
         };
         this.data.debts.push(debt);
@@ -151,8 +261,25 @@ class DataService {
     }
 
     resolveDebt(id) {
-        this.data.debts = this.data.debts.filter(d => d.id !== id);
-        this.recalculateDebtWallets();
+        const debt = this.data.debts.find(d => d.id === id);
+        if(debt) {
+            debt.status = debt.status === 'pending' ? 'paid' : 'pending';
+            this.recalculateDebtWallets();
+        }
+    }
+
+    updateDebt(id, type, name, phone, amount, proofImage) {
+        const debt = this.data.debts.find(d => d.id === id);
+        if(debt) {
+            debt.type = type;
+            debt.name = name;
+            debt.phone = phone || '';
+            debt.amount = parseFloat(amount) || 0;
+            if(proofImage) debt.proofImage = proofImage;
+            this.recalculateDebtWallets();
+            return true;
+        }
+        return false;
     }
 
     recalculateDebtWallets() {
@@ -161,12 +288,12 @@ class DataService {
 
         if(hutangWallet) {
             hutangWallet.balance = this.data.debts
-                .filter(d => d.type === 'hutang')
+                .filter(d => d.type === 'hutang' && d.status !== 'paid')
                 .reduce((acc, curr) => acc + curr.amount, 0);
         }
         if(piutangWallet) {
             piutangWallet.balance = this.data.debts
-                .filter(d => d.type === 'piutang')
+                .filter(d => d.type === 'piutang' && d.status !== 'paid')
                 .reduce((acc, curr) => acc + curr.amount, 0);
         }
         this.saveData();

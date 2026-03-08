@@ -109,21 +109,29 @@
                     </div>
                 </section>
 
+                <section class="portfolio-card mt-4">
+                    <div class="portfolio-header">
+                        <h2 class="section-title"><i class="ri-target-line"></i> Target Tabungan</h2>
+                        <button class="btn btn-small btn-primary" onclick="app.openGoalModal()"><i class="ri-add-line"></i> Buat Target</button>
+                    </div>
+                    <div class="assets-list mt-3" id="goals-list">
+                        <!-- Goals rendered here -->
+                    </div>
+                </section>
+
                 <section class="debt-management-card mt-5">
                     <div class="portfolio-header">
                         <h2 class="section-title"><i class="ri-hand-coin-line"></i> Hutang & Piutang</h2>
-                        <button class="btn btn-small btn-outline text-red" onclick="app.openDebtModal()"><i
-                                class="ri-add-line"></i> Catat Baru</button>
                     </div>
-                    <div class="assets-list mt-3" id="debt-list">
-                        <!-- Custom debts will be rendered here -->
+                    <div class="assets-list mt-3" id="debt-menu-list">
+                        <!-- Debt menus will be rendered here -->
                     </div>
                 </section>
 
                 <div class="action-buttons-grid mt-4">
-                    <button class="btn btn-dark btn-large"><i class="ri-shopping-cart-2-line"></i> Beli Aset</button>
-                    <button class="btn btn-outline btn-large"><i class="ri-money-dollar-circle-line"></i> Jual
-                        Aset</button>
+                    <button class="btn btn-dark btn-large" style="grid-column: span 2;" onclick="app.openAssetModal()">
+                        <i class="ri-add-line"></i> Tambah Portofolio Aset
+                    </button>
                 </div>
                 <div class="spacer-bottom"></div>
             </div>
@@ -141,6 +149,62 @@
 
                 <div class="assets-list mt-4" id="category-wallets-list">
                     <!-- Credit cards rendered here -->
+                </div>
+
+                <div class="spacer-bottom"></div>
+            </div>
+
+            <!-- View: Wallet Specific Detail (History per wallet) -->
+            <div id="view-wallet-detail" class="view">
+                <div class="header category-header"
+                    style="padding: 24px 0 16px; margin-top: -24px; position: sticky; top: -24px; background: var(--bg-main); z-index: 10; display: flex; align-items: center; border-bottom: 1px solid var(--border);">
+                    <button class="icon-btn" onclick="app.navigate('wallet-category')"><i class="ri-arrow-left-s-line"
+                            style="font-size:24px;"></i></button>
+                    <h2 class="section-title" id="wallet-detail-title" style="margin-left: 16px; flex:1;">Detail Dompet</h2>
+                </div>
+
+                <div id="wallet-summary-card" class="mt-4">
+                    <!-- Wallet Card rendered here -->
+                </div>
+
+                <h3 class="section-title mt-4 mb-3" style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7;">Riwayat Transaksi</h3>
+                <div class="history-list" id="wallet-specific-history">
+                    <!-- Custom transactions rendered here -->
+                </div>
+
+                <div class="spacer-bottom"></div>
+            </div>
+
+            <!-- View: All Goals List -->
+            <div id="view-goals-list" class="view">
+                <div class="header category-header"
+                    style="padding: 24px 0 16px; margin-top: -24px; position: sticky; top: -24px; background: var(--bg-main); z-index: 10; display: flex; align-items: center; border-bottom: 1px solid var(--border);">
+                    <button class="icon-btn" onclick="app.navigate('assets')"><i class="ri-arrow-left-s-line"
+                            style="font-size:24px;"></i></button>
+                    <h2 class="section-title" style="margin-left: 16px; flex:1;">Semua Target Tabungan</h2>
+                    <button class="btn btn-small btn-primary" onclick="app.openGoalModal()"><i class="ri-add-line"></i> Buat</button>
+                </div>
+
+                <div class="assets-list mt-4" id="all-goals-list">
+                    <!-- All Goals rendered here -->
+                </div>
+
+                <div class="spacer-bottom"></div>
+            </div>
+
+            <!-- View: Debt Category Detail -->
+            <div id="view-debt-category" class="view">
+                <div class="header category-header"
+                    style="padding: 24px 0 16px; margin-top: -24px; position: sticky; top: -24px; background: var(--bg-main); z-index: 10; display: flex; align-items: center; border-bottom: 1px solid var(--border);">
+                    <button class="icon-btn" onclick="app.navigate('assets')"><i class="ri-arrow-left-s-line"
+                            style="font-size:24px;"></i></button>
+                    <h2 class="section-title" id="debt-category-title" style="margin-left: 16px; flex:1;">Detail</h2>
+                    <button class="btn btn-small btn-primary" onclick="app.openDebtModal()"><i class="ri-add-line"></i>
+                        Catat Baru</button>
+                </div>
+
+                <div class="assets-list mt-4" id="category-debts-list">
+                    <!-- Debt cards rendered here -->
                 </div>
 
                 <div class="spacer-bottom"></div>
@@ -218,9 +282,9 @@
             <!-- History View -->
             <div id="view-history" class="view">
                 <div class="history-filters mb-3">
-                    <button class="filter-chip active">Semua</button>
-                    <button class="filter-chip">Pemasukan</button>
-                    <button class="filter-chip">Pengeluaran</button>
+                    <button class="filter-chip active" onclick="app.filterHistory('all', this)">Semua</button>
+                    <button class="filter-chip" onclick="app.filterHistory('income', this)">Pemasukan</button>
+                    <button class="filter-chip" onclick="app.filterHistory('expense', this)">Pengeluaran</button>
                 </div>
                 <div class="transactions-list full-list" id="all-transactions">
                     <!-- Transactions will be rendered here -->
@@ -313,9 +377,10 @@
                     <form id="form-add-debt">
                         <div class="form-group">
                             <label>Jenis Catatan</label>
-                            <select id="debt-type" required>
+                            <select id="debt-type" required onchange="app.toggleDebtWallet()">
                                 <option value="piutang">Piutang (Orang ngutang ke saya)</option>
                                 <option value="hutang">Hutang (Saya ngutang ke orang)</option>
+                                <option value="undangan">Investasi Sosial (Undangan/Kondangan)</option>
                             </select>
                         </div>
 
@@ -335,6 +400,14 @@
                                 <span>Rp</span>
                                 <input type="number" id="debt-amount" placeholder="0" value="0" required>
                             </div>
+                        </div>
+
+                        <div class="form-group" id="group-debt-wallet" style="display:none;">
+                            <label>Sumber Dana (Opsional)</label>
+                            <select id="debt-wallet">
+                                <option value="">-- Hanya Catat Saja --</option>
+                                <!-- Rendered dynamically -->
+                            </select>
                         </div>
 
                         <div class="form-group mt-3">
@@ -384,14 +457,32 @@
                             </div>
                             <div class="form-group" id="group-category">
                                 <label>Kategori</label>
-                                <select id="tx-category" required>
-                                    <option value="makan">Makan & Minum</option>
-                                    <option value="transport">Transportasi</option>
-                                    <option value="tagihan">Tagihan</option>
-                                    <option value="belanja">Belanja</option>
-                                    <option value="hiburan">Hiburan</option>
-                                    <option value="lainnya">Lainnya</option>
-                                </select>
+                                <input type="text" id="tx-category" list="category-options" placeholder="Pilih atau ketik baru" required>
+                                <datalist id="category-options">
+                                    <option value="Makan & Minum"></option>
+                                    <option value="Transportasi"></option>
+                                    <option value="Tagihan"></option>
+                                    <option value="Belanja"></option>
+                                    <option value="Hiburan"></option>
+                                    <option value="Lainnya"></option>
+                                </datalist>
+                            </div>
+                        </div>
+
+                        <div id="group-transfer" style="display: none; margin-bottom: 16px;">
+                            <div class="form-row" style="margin-bottom: 8px;">
+                                <div class="form-group">
+                                    <label>No. Rekening / HP Tujuan</label>
+                                    <input type="text" id="tx-transfer-account" placeholder="Cth: 081234...">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nama Penerima</label>
+                                    <input type="text" id="tx-transfer-name" placeholder="Cth: Budi">
+                                </div>
+                            </div>
+                            <label style="font-size: 11px; margin-bottom: 4px; display: block;">Kontak Tersimpan</label>
+                            <div id="transfer-contacts-list" class="history-filters" style="padding-bottom: 8px;">
+                                <!-- Contact chips rendered here -->
                             </div>
                         </div>
 
@@ -408,6 +499,107 @@
                         <button type="button" class="btn btn-primary btn-block mt-4 btn-large"
                             onclick="app.handleTransactionSubmit()">Simpan Transaksi</button>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal: Add Goal -->
+        <div class="modal-overlay" id="add-goal-modal">
+            <div class="modal-content bottom-sheet">
+                <div class="modal-header">
+                    <h3 class="modal-title">Buat Target Tabungan</h3>
+                    <button class="icon-btn btn-close-modal"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="modal-body pb-4">
+                    <form id="form-add-goal">
+                        <div class="form-group">
+                            <label>Nama Target (Contoh: Beli Motor)</label>
+                            <input type="text" id="goal-name" placeholder="Cth: Dana Darurat" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nominal Target</label>
+                            <div class="input-currency">
+                                <span>Rp</span>
+                                <input type="number" id="goal-amount" placeholder="0" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Sumber Dana (Dompet)</label>
+                                <select id="goal-wallet" required>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Target Tercapai Tanggal</label>
+                                <input type="date" id="goal-date" required>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-block mt-4 btn-large"
+                            onclick="app.handleGoalSubmit()">Simpan Target</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Modal: Add Asset -->
+        <div class="modal-overlay" id="add-asset-modal">
+            <div class="modal-content bottom-sheet">
+                <div class="modal-header">
+                    <h3 class="modal-title">Tambah / Edit Aset</h3>
+                    <button class="icon-btn btn-close-modal"><i class="ri-close-line"></i></button>
+                </div>
+                <div class="modal-body pb-4">
+                    <form id="form-add-asset">
+                        <div class="form-group">
+                            <label>Nama Aset</label>
+                            <input type="text" id="asset-name" placeholder="Cth: Emas Antam, BNB, ASII" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Kategori Aset</label>
+                            <select id="asset-type" required>
+                                <option value="gold">Emas</option>
+                                <option value="crypto">Kripto</option>
+                                <option value="stock">Saham / Reksadana</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Jumlah Unit</label>
+                                <div class="input-currency">
+                                    <span><i class="ri-stack-line"></i></span>
+                                    <input type="number" id="asset-unit" step="any" placeholder="0" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Satuan (Unit)</label>
+                                <input type="text" id="asset-unit-label" placeholder="Cth: gram, lot" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Harga per Unit (Saat Ini)</label>
+                            <div class="input-currency">
+                                <span>Rp</span>
+                                <input type="number" id="asset-price" placeholder="0" required>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 24px;">
+                            <button type="button" class="btn btn-outline" id="btn-delete-asset" style="display:none; flex:1;" onclick="app.executeDeleteAsset()">Hapus</button>
+                            <button type="button" class="btn btn-primary" style="flex:2;" onclick="app.handleAssetSubmit()">Simpan Aset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="confirm-modal">
+            <div class="modal-content center-popup" style="text-align: center;">
+                <div style="font-size: 48px; color: var(--danger); margin-bottom: 16px;">
+                    <i class="ri-error-warning-line"></i>
+                </div>
+                <h3 style="margin-bottom: 8px;">Konfirmasi Hapus</h3>
+                <p id="confirm-modal-text" style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;">Apakah Anda yakin?</p>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-outline" style="flex: 1;" onclick="app.closeModals()">Batal</button>
+                    <button class="btn" style="flex: 1; background: var(--danger); color: white;" id="confirm-modal-yes" onclick="app.executeConfirm()">Ya, Hapus</button>
                 </div>
             </div>
         </div>
